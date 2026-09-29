@@ -585,3 +585,36 @@ body {
 
     font-size: 13px;
 }
+
+
+
+
+/* ---------------- Emergency Explanation ---------------- */
+
+.emergency-explanation {
+    max-width: 650px;
+    margin-top: 30px;
+    padding: 25px;
+
+    background-color: #ffffff;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.emergency-explanation h3 {
+    margin-bottom: 10px;
+    color: #991b1b;
+}
+
+.emergency-explanation h3:not(:first-child) {
+    margin-top: 25px;
+}
+
+.emergency-explanation p {
+    line-height: 1.7;
+    color: #4b5563;
+}
