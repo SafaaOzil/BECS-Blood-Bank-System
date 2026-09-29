@@ -1,31 +1,28 @@
-from dataclasses import dataclass
+from datetime import datetime
+
 from src.blood_types import (
     BLOOD_TYPES,
     BLOOD_TYPE_DISTRIBUTION,
     get_compatible_donors
 )
-@dataclass
-class BloodUnit:
-    """
-    Represents one donated blood unit in the BECS system.
-    """
 
-    blood_type: str
-    donation_date: str
-    donor_id: str
-    donor_name: str
+from src.models import db, BloodUnitModel
+
 
 class BloodBank:
     """
-    Manages the blood units stored in the BECS blood bank.
+    Manages the blood units stored in the BECS database.
     """
 
-    def __init__(self):
-        self.inventory = {blood_type: [] for blood_type in BLOOD_TYPES}
-
-    def add_donation(self, blood_type, donation_date, donor_id, donor_name):
+    def add_donation(
+        self,
+        blood_type,
+        donation_date,
+        donor_id,
+        donor_name
+    ):
         """
-        Add a new donated blood unit to the inventory.
+        Add a new donated blood unit to the database.
         """
 
         if blood_type not in BLOOD_TYPES:
@@ -34,61 +31,92 @@ class BloodBank:
         if not donation_date.strip():
             raise ValueError("Donation date is required.")
 
+        try:
+            datetime.strptime(donation_date, "%d/%m/%Y")
+        except ValueError:
+            raise ValueError(
+                "Donation date must be in DD/MM/YYYY format."
+            )
+
         if not donor_id.strip():
             raise ValueError("Donor ID is required.")
+
+        if not donor_id.isdigit():
+            raise ValueError("Donor ID must contain digits only.")
+
+        if len(donor_id) != 9:
+            raise ValueError(
+                "Donor ID must contain exactly 9 digits."
+            )
 
         if not donor_name.strip():
             raise ValueError("Donor name is required.")
 
-        unit = BloodUnit(
+        if len(donor_name.strip()) < 2:
+            raise ValueError("Donor name is too short.")
+
+        unit = BloodUnitModel(
             blood_type=blood_type,
             donation_date=donation_date,
             donor_id=donor_id,
-            donor_name=donor_name
+            donor_name=donor_name.strip()
         )
 
-        self.inventory[blood_type].append(unit)
+        db.session.add(unit)
+        db.session.commit()
 
         return unit
+
     def get_stock_count(self, blood_type):
         """
-        Return the number of available units for a specific blood type.
+        Return the number of available units
+        for a specific blood type.
         """
 
         if blood_type not in BLOOD_TYPES:
             raise ValueError("Invalid blood type.")
 
-        return len(self.inventory[blood_type])
+        return BloodUnitModel.query.filter_by(
+            blood_type=blood_type
+        ).count()
 
     def get_inventory_summary(self):
         """
-        Return the number of available units for every blood type.
+        Return the number of available units
+        for every blood type.
         """
 
         return {
-            blood_type: len(units)
-            for blood_type, units in self.inventory.items()
+            blood_type: self.get_stock_count(blood_type)
+            for blood_type in BLOOD_TYPES
         }
 
-    
-    def find_alternative_blood_type(self, requested_type, quantity=1):
+    def find_alternative_blood_type(
+        self,
+        requested_type,
+        quantity=1
+    ):
         """
         Find the best available alternative blood type.
 
         The alternative must:
         1. Be compatible with the recipient.
         2. Have enough units for the requested quantity.
-        3. Prefer a more common blood type in order to preserve
-           rarer blood types when possible.
+        3. Prefer a more common blood type in order
+           to preserve rarer blood types when possible.
         """
 
         if requested_type not in BLOOD_TYPES:
             raise ValueError("Invalid blood type.")
 
         if not isinstance(quantity, int) or quantity <= 0:
-            raise ValueError("Quantity must be a positive integer.")
+            raise ValueError(
+                "Quantity must be a positive integer."
+            )
 
-        compatible_donors = get_compatible_donors(requested_type)
+        compatible_donors = get_compatible_donors(
+            requested_type
+        )
 
         available_alternatives = []
 
@@ -103,50 +131,64 @@ class BloodBank:
             return None
 
         available_alternatives.sort(
-            key=lambda blood_type: BLOOD_TYPE_DISTRIBUTION[blood_type],
+            key=lambda blood_type:
+                BLOOD_TYPE_DISTRIBUTION[blood_type],
             reverse=True
         )
 
         return available_alternatives[0]
 
-
-    ###########################
     def issue_blood(self, requested_type, quantity):
         """
         Issue blood units of the requested type.
 
-        If there are not enough units of the requested blood type,
-        return a compatible alternative recommendation when available.
+        If there are not enough units of the requested
+        blood type, return a compatible alternative
+        recommendation when available.
         """
 
         if requested_type not in BLOOD_TYPES:
             raise ValueError("Invalid blood type.")
 
         if not isinstance(quantity, int) or quantity <= 0:
-            raise ValueError("Quantity must be a positive integer.")
+            raise ValueError(
+                "Quantity must be a positive integer."
+            )
 
-        available_quantity = self.get_stock_count(requested_type)
+        available_quantity = self.get_stock_count(
+            requested_type
+        )
 
-        # Enough units of the requested blood type are available
         if available_quantity >= quantity:
-            issued_units = []
+            units = (
+                BloodUnitModel.query
+                .filter_by(blood_type=requested_type)
+                .order_by(BloodUnitModel.id.asc())
+                .limit(quantity)
+                .all()
+            )
 
-            for _ in range(quantity):
-                unit = self.inventory[requested_type].pop(0)
-                issued_units.append(unit)
+            issued_unit_ids = [
+                unit.id for unit in units
+            ]
+
+            for unit in units:
+                db.session.delete(unit)
+
+            db.session.commit()
 
             return {
                 "success": True,
                 "issued_type": requested_type,
                 "quantity": quantity,
-                "units": issued_units,
+                "unit_ids": issued_unit_ids,
                 "alternative": None
             }
 
-        # Not enough units - look for a compatible alternative
         alternative = self.find_alternative_blood_type(
-    requested_type,
-    quantity)
+            requested_type,
+            quantity
+        )
 
         return {
             "success": False,
@@ -155,28 +197,41 @@ class BloodBank:
             "available_quantity": available_quantity,
             "alternative": alternative
         }
+
     def issue_emergency_blood(self):
         """
-        Issue all available O- blood units for a mass casualty
-        emergency event.
-
-        Raises an error if no O- units are available.
+        Issue all available O- blood units
+        for a mass casualty emergency event.
         """
 
         emergency_blood_type = "O-"
 
-        available_quantity = self.get_stock_count(emergency_blood_type)
+        units = (
+            BloodUnitModel.query
+            .filter_by(blood_type=emergency_blood_type)
+            .order_by(BloodUnitModel.id.asc())
+            .all()
+        )
 
-        if available_quantity == 0:
-            raise ValueError("No O- blood units available for emergency.")
+        if not units:
+            raise ValueError(
+                "No O- blood units available for emergency."
+            )
 
-        issued_units = self.inventory[emergency_blood_type].copy()
+        issued_unit_ids = [
+            unit.id for unit in units
+        ]
 
-        self.inventory[emergency_blood_type].clear()
+        quantity = len(units)
+
+        for unit in units:
+            db.session.delete(unit)
+
+        db.session.commit()
 
         return {
             "success": True,
             "issued_type": emergency_blood_type,
-            "quantity": available_quantity,
-            "units": issued_units
+            "quantity": quantity,
+            "unit_ids": issued_unit_ids
         }
