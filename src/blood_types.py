@@ -51,3 +51,18 @@ def is_compatible(donor_type, recipient_type):
         return False
 
     return recipient_type in DONATION_COMPATIBILITY[donor_type]
+def get_compatible_donors(recipient_type):
+    """
+    Return all blood types that can donate to the given recipient.
+    """
+
+    if recipient_type not in BLOOD_TYPES:
+        raise ValueError("Invalid blood type.")
+
+    compatible_donors = []
+
+    for donor_type in BLOOD_TYPES:
+        if is_compatible(donor_type, recipient_type):
+            compatible_donors.append(donor_type)
+
+    return compatible_donors
