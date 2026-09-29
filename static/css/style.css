@@ -320,3 +320,177 @@ body {
 
     color: #991b1b;
 }
+
+
+.alert-warning {
+    background-color: #fffbeb;
+
+    border: 1px solid #fde68a;
+
+    color: #92400e;
+}
+
+
+
+
+.alternative-form {
+    margin-bottom: 25px;
+}
+
+.alternative-button {
+    width: 100%;
+
+    padding: 13px 20px;
+
+    border: 1px solid #d97706;
+
+    border-radius: 8px;
+
+    background-color: #ffffff;
+
+    color: #92400e;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.alternative-button:hover {
+    background-color: #fffbeb;
+}
+
+
+
+/* ---------------- Routine Issue Plan ---------------- */
+
+.issue-plan-section {
+    margin-top: 35px;
+
+    max-width: 750px;
+
+    background-color: #ffffff;
+
+    padding: 30px;
+
+    border-radius: 12px;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.issue-plan-section h3 {
+    margin-bottom: 20px;
+}
+
+.recommendation-message {
+    margin: 20px 0;
+
+    padding: 16px;
+
+    background-color: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 8px;
+}
+
+.recommendation-message span {
+    display: inline-block;
+
+    margin-left: 12px;
+
+    font-weight: bold;
+
+    color: #b91c1c;
+}
+
+
+/* ---------------- Selection table ---------------- */
+
+.selection-table {
+    margin: 25px 0;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 8px;
+
+    overflow: hidden;
+}
+
+.selection-row {
+    display: grid;
+
+    grid-template-columns:
+        1fr 1fr 1fr;
+
+    align-items: center;
+
+    padding: 14px 18px;
+
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.selection-row:last-child {
+    border-bottom: none;
+}
+
+.selection-header {
+    background-color: #f3f4f6;
+
+    font-weight: bold;
+}
+
+.selection-blood-type {
+    font-weight: bold;
+
+    color: #b91c1c;
+}
+
+.selection-row input {
+    width: 90px;
+
+    padding: 8px;
+
+    border: 1px solid #d1d5db;
+
+    border-radius: 6px;
+}
+
+.selection-note {
+    margin: 20px 0;
+
+    color: #4b5563;
+
+    font-size: 14px;
+}
+
+
+/* ---------------- Partial issue ---------------- */
+
+.partial-button {
+    width: 100%;
+
+    padding: 13px 20px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background-color: #d97706;
+
+    color: #ffffff;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.partial-button:hover {
+    background-color: #b45309;
+}

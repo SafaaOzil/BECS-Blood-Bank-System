@@ -14,6 +14,10 @@ class BloodBank:
     Manages the blood units stored in the BECS database.
     """
 
+    # --------------------------------------------------
+    # Blood Donation
+    # --------------------------------------------------
+
     def add_donation(
         self,
         blood_type,
@@ -38,19 +42,21 @@ class BloodBank:
             ).date()
         except ValueError:
             raise ValueError(
-               "Donation date must be in DD/MM/YYYY format."
+                "Donation date must be in DD/MM/YYYY format."
             )
 
         if parsed_date > datetime.now().date():
             raise ValueError(
-               "Donation date cannot be in the future."
-    )
+                "Donation date cannot be in the future."
+            )
 
         if not donor_id.strip():
             raise ValueError("Donor ID is required.")
 
         if not donor_id.isdigit():
-            raise ValueError("Donor ID must contain digits only.")
+            raise ValueError(
+                "Donor ID must contain digits only."
+            )
 
         if len(donor_id) != 9:
             raise ValueError(
@@ -74,6 +80,10 @@ class BloodBank:
         db.session.commit()
 
         return unit
+
+    # --------------------------------------------------
+    # Inventory
+    # --------------------------------------------------
 
     def get_stock_count(self, blood_type):
         """
@@ -99,19 +109,23 @@ class BloodBank:
             for blood_type in BLOOD_TYPES
         }
 
-    def find_alternative_blood_type(
-        self,
-        requested_type,
-        quantity=1
-    ):
-        """
-        Find the best available alternative blood type.
+    # --------------------------------------------------
+    # Routine Blood Issue - Recommendation
+    # --------------------------------------------------
 
-        The alternative must:
-        1. Be compatible with the recipient.
-        2. Have enough units for the requested quantity.
-        3. Prefer a more common blood type in order
-           to preserve rarer blood types when possible.
+    def create_issue_plan(self, requested_type, quantity):
+        """
+        Create a recommended blood issue plan.
+
+        The plan:
+        1. Uses the requested blood type first.
+        2. Uses only compatible alternatives.
+        3. Prefers more common alternatives in order
+           to preserve rarer blood types.
+        4. If the full request cannot be supplied,
+           returns the maximum compatible quantity available.
+
+        This function does NOT remove blood from inventory.
         """
 
         if requested_type not in BLOOD_TYPES:
@@ -126,85 +140,232 @@ class BloodBank:
             requested_type
         )
 
-        available_alternatives = []
+        # The requested blood type always has first priority.
+        alternative_types = [
+            blood_type
+            for blood_type in compatible_donors
+            if blood_type != requested_type
+        ]
 
-        for blood_type in compatible_donors:
-            if blood_type == requested_type:
-                continue
-
-            if self.get_stock_count(blood_type) >= quantity:
-                available_alternatives.append(blood_type)
-
-        if not available_alternatives:
-            return None
-
-        available_alternatives.sort(
+        # Among alternatives, prefer more common blood types.
+        alternative_types.sort(
             key=lambda blood_type:
                 BLOOD_TYPE_DISTRIBUTION[blood_type],
             reverse=True
         )
 
-        return available_alternatives[0]
+        priority_order = [
+            requested_type,
+            *alternative_types
+        ]
 
-    def issue_blood(self, requested_type, quantity):
+        plan = {}
+        availability = {}
+
+        remaining_quantity = quantity
+
+        for blood_type in priority_order:
+
+            available = self.get_stock_count(
+                blood_type
+            )
+
+            availability[blood_type] = available
+
+            if remaining_quantity > 0:
+                selected_quantity = min(
+                    available,
+                    remaining_quantity
+                )
+            else:
+                selected_quantity = 0
+
+            plan[blood_type] = selected_quantity
+
+            remaining_quantity -= selected_quantity
+
+        total_selected = sum(plan.values())
+
+        full_request_available = (
+            total_selected == quantity
+        )
+
+        return {
+            "requested_type": requested_type,
+            "requested_quantity": quantity,
+            "compatible_types": priority_order,
+            "availability": availability,
+            "recommended_plan": plan,
+            "total_available_for_request": sum(
+                availability.values()
+            ),
+            "recommended_quantity": total_selected,
+            "missing_quantity": quantity - total_selected,
+            "full_request_available": full_request_available
+        }
+
+    # --------------------------------------------------
+    # Routine Blood Issue - Confirmation
+    # --------------------------------------------------
+
+    def confirm_issue_plan(
+        self,
+        requested_type,
+        requested_quantity,
+        selected_quantities
+    ):
         """
-        Issue blood units of the requested type.
+        Validate and issue the user's selected blood plan.
 
-        If there are not enough units of the requested
-        blood type, return a compatible alternative
-        recommendation when available.
+        selected_quantities example:
+        {
+            "A+": 2,
+            "O+": 1,
+            "A-": 0,
+            "O-": 0
+        }
+
+        A full issue may equal the requested quantity.
+        A partial issue may be smaller if the complete
+        request cannot be fulfilled from compatible stock.
         """
 
         if requested_type not in BLOOD_TYPES:
             raise ValueError("Invalid blood type.")
 
-        if not isinstance(quantity, int) or quantity <= 0:
+        if (
+            not isinstance(requested_quantity, int)
+            or requested_quantity <= 0
+        ):
             raise ValueError(
-                "Quantity must be a positive integer."
+                "Requested quantity must be a positive integer."
             )
 
-        available_quantity = self.get_stock_count(
+        compatible_donors = get_compatible_donors(
             requested_type
         )
 
-        if available_quantity >= quantity:
+        clean_selection = {}
+
+        for blood_type, quantity in selected_quantities.items():
+
+            if blood_type not in BLOOD_TYPES:
+                raise ValueError(
+                    "Invalid blood type in selection."
+                )
+
+            if blood_type not in compatible_donors:
+                raise ValueError(
+                    f"{blood_type} is not compatible "
+                    f"with {requested_type}."
+                )
+
+            if not isinstance(quantity, int) or quantity < 0:
+                raise ValueError(
+                    "Selected quantities must be "
+                    "non-negative integers."
+                )
+
+            available = self.get_stock_count(
+                blood_type
+            )
+
+            if quantity > available:
+                raise ValueError(
+                    f"Only {available} unit(s) of "
+                    f"{blood_type} are currently available."
+                )
+
+            clean_selection[blood_type] = quantity
+
+        selected_total = sum(
+            clean_selection.values()
+        )
+
+        if selected_total == 0:
+            raise ValueError(
+                "At least one blood unit must be selected."
+            )
+
+        if selected_total > requested_quantity:
+            raise ValueError(
+                "Selected quantity cannot exceed "
+                "the requested quantity."
+            )
+
+        # Determine how many compatible units currently exist.
+        total_compatible_available = sum(
+            self.get_stock_count(blood_type)
+            for blood_type in compatible_donors
+        )
+
+        # If enough compatible blood exists to satisfy the
+        # complete request, a partial issue is not accepted.
+        if (
+            total_compatible_available >= requested_quantity
+            and selected_total < requested_quantity
+        ):
+            raise ValueError(
+                f"Please select exactly "
+                f"{requested_quantity} blood unit(s)."
+            )
+
+        # If the complete request cannot be fulfilled,
+        # issue the maximum available compatible quantity.
+        if total_compatible_available < requested_quantity:
+            maximum_possible = total_compatible_available
+
+            if selected_total != maximum_possible:
+                raise ValueError(
+                    f"Only {maximum_possible} compatible "
+                    f"unit(s) are available. "
+                    f"Please select all available compatible "
+                    f"units for the partial issue."
+                )
+
+        issued_units = []
+
+        for blood_type, quantity in clean_selection.items():
+
+            if quantity == 0:
+                continue
+
             units = (
                 BloodUnitModel.query
-                .filter_by(blood_type=requested_type)
+                .filter_by(blood_type=blood_type)
                 .order_by(BloodUnitModel.id.asc())
                 .limit(quantity)
                 .all()
             )
 
-            issued_unit_ids = [
-                unit.id for unit in units
-            ]
-
             for unit in units:
+                issued_units.append({
+                    "id": unit.id,
+                    "blood_type": unit.blood_type
+                })
+
                 db.session.delete(unit)
 
-            db.session.commit()
-
-            return {
-                "success": True,
-                "issued_type": requested_type,
-                "quantity": quantity,
-                "unit_ids": issued_unit_ids,
-                "alternative": None
-            }
-
-        alternative = self.find_alternative_blood_type(
-            requested_type,
-            quantity
-        )
+        db.session.commit()
 
         return {
-            "success": False,
+            "success": True,
             "requested_type": requested_type,
-            "requested_quantity": quantity,
-            "available_quantity": available_quantity,
-            "alternative": alternative
+            "requested_quantity": requested_quantity,
+            "issued_quantity": selected_total,
+            "partial": selected_total < requested_quantity,
+            "issued_units": issued_units,
+            "issued_by_type": {
+                blood_type: quantity
+                for blood_type, quantity
+                in clean_selection.items()
+                if quantity > 0
+            }
         }
+
+    # --------------------------------------------------
+    # Emergency MCI
+    # --------------------------------------------------
 
     def issue_emergency_blood(self):
         """
@@ -216,7 +377,9 @@ class BloodBank:
 
         units = (
             BloodUnitModel.query
-            .filter_by(blood_type=emergency_blood_type)
+            .filter_by(
+                blood_type=emergency_blood_type
+            )
             .order_by(BloodUnitModel.id.asc())
             .all()
         )

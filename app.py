@@ -101,6 +101,165 @@ def donation():
         form_data=form_data
     )
 
+
+
+# --------------------------------------------------
+# Routine Blood Issue
+# --------------------------------------------------
+
+@app.route("/routine-issue", methods=["GET", "POST"])
+def routine_issue():
+
+    error_message = None
+    issue_plan = None
+    form_data = {}
+
+    if request.method == "POST":
+
+        form_data = request.form
+
+        requested_type = request.form.get(
+            "requested_type",
+            ""
+        ).strip()
+
+        quantity_text = request.form.get(
+            "quantity",
+            ""
+        ).strip()
+
+        try:
+            quantity = int(quantity_text)
+
+            issue_plan = blood_bank.create_issue_plan(
+                requested_type,
+                quantity
+            )
+
+        except ValueError as error:
+            error_message = str(error)
+
+    return render_template(
+        "routine_issue.html",
+        blood_types=BLOOD_TYPES,
+        error_message=error_message,
+        success_message=None,
+        issue_plan=issue_plan,
+        form_data=form_data
+    )
+
+
+# --------------------------------------------------
+# Confirm Routine Blood Issue
+# --------------------------------------------------
+
+@app.route("/confirm-routine-issue", methods=["POST"])
+def confirm_routine_issue():
+
+    requested_type = request.form.get(
+        "requested_type",
+        ""
+    ).strip()
+
+    requested_quantity_text = request.form.get(
+        "requested_quantity",
+        ""
+    ).strip()
+
+    try:
+        requested_quantity = int(
+            requested_quantity_text
+        )
+
+        compatible_types = blood_bank.create_issue_plan(
+            requested_type,
+            requested_quantity
+        )["compatible_types"]
+
+        selected_quantities = {}
+
+        for blood_type in compatible_types:
+
+            field_name = (
+                "selected_"
+                + blood_type
+                .replace("+", "_plus")
+                .replace("-", "_minus")
+            )
+
+            quantity_text = request.form.get(
+                field_name,
+                "0"
+            ).strip()
+
+            selected_quantities[blood_type] = int(
+                quantity_text
+            )
+
+        result = blood_bank.confirm_issue_plan(
+            requested_type,
+            requested_quantity,
+            selected_quantities
+        )
+
+        issued_description = ", ".join(
+            f"{quantity} × {blood_type}"
+            for blood_type, quantity
+            in result["issued_by_type"].items()
+        )
+
+        if result["partial"]:
+
+            success_message = (
+                f"Partial issue completed: "
+                f"{result['issued_quantity']} of "
+                f"{result['requested_quantity']} requested "
+                f"unit(s) were issued. "
+                f"Issued: {issued_description}."
+            )
+
+        else:
+
+            success_message = (
+                f"Blood issue completed successfully. "
+                f"Issued: {issued_description}."
+            )
+
+        return render_template(
+            "routine_issue.html",
+            blood_types=BLOOD_TYPES,
+            error_message=None,
+            success_message=success_message,
+            issue_plan=None,
+            form_data={}
+        )
+
+    except (ValueError, TypeError) as error:
+
+        try:
+            issue_plan = blood_bank.create_issue_plan(
+                requested_type,
+                int(requested_quantity_text)
+            )
+        except (ValueError, TypeError):
+            issue_plan = None
+
+        return render_template(
+            "routine_issue.html",
+            blood_types=BLOOD_TYPES,
+            error_message=str(error),
+            success_message=None,
+            issue_plan=issue_plan,
+            form_data={
+                "requested_type": requested_type,
+                "quantity": requested_quantity_text
+            }
+        )
+
+
+
+
+
 # --------------------------------------------------
 # Run application
 # --------------------------------------------------
