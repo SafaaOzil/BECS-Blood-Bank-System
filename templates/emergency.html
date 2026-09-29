@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}
+Emergency MCI - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="page-header">
+
+    <h2>Emergency MCI</h2>
+
+    <p>
+        Emergency issue of O- blood units.
+    </p>
+
+</section>
+
+
+<div class="emergency-container">
+
+    {% if success_message %}
+
+        <div class="alert alert-success">
+            {{ success_message }}
+        </div>
+
+    {% endif %}
+
+
+    {% if error_message %}
+
+        <div class="alert alert-error">
+            {{ error_message }}
+        </div>
+
+    {% endif %}
+
+
+    <div class="emergency-status">
+
+        <div class="emergency-blood-type">
+            O-
+        </div>
+
+        <div class="emergency-stock">
+            {{ o_negative_stock }}
+        </div>
+
+        <div class="emergency-stock-label">
+            units currently available
+        </div>
+
+    </div>
+
+
+    {% if o_negative_stock > 0 %}
+
+        <div class="alert alert-warning">
+
+            <strong>Emergency MCI</strong>
+
+            <br><br>
+
+            Maximum available emergency issue:
+            <strong>
+                {{ o_negative_stock }} O- unit(s)
+            </strong>.
+
+            <br><br>
+
+            The maximum available quantity is
+            selected by default, but you may choose
+            a smaller quantity.
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="/emergency"
+        >
+
+            <div class="form-group">
+
+                <label for="quantity">
+                    Number of O- Units to Issue
+                </label>
+
+                <input
+                    type="number"
+                    id="quantity"
+                    name="quantity"
+                    min="1"
+                    max="{{ o_negative_stock }}"
+                    step="1"
+                    value="{{ o_negative_stock }}"
+                    required
+                >
+
+                <small class="field-help">
+                    Minimum: 1 |
+                    Maximum: {{ o_negative_stock }}
+                </small>
+
+            </div>
+
+
+            <button
+                type="submit"
+                class="emergency-button"
+            >
+                Issue Emergency Blood
+            </button>
+
+        </form>
+
+    {% else %}
+
+        <div class="alert alert-error">
+
+            No O- blood units are currently
+            available for emergency issue.
+
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

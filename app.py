@@ -259,6 +259,58 @@ def confirm_routine_issue():
 
 
 
+# --------------------------------------------------
+# Emergency MCI
+# --------------------------------------------------
+
+@app.route("/emergency", methods=["GET", "POST"])
+def emergency():
+
+    success_message = None
+    error_message = None
+
+    if request.method == "POST":
+
+        quantity_text = request.form.get(
+            "quantity",
+            ""
+        ).strip()
+
+        try:
+            quantity = int(quantity_text)
+
+            result = blood_bank.issue_emergency_blood(
+                quantity
+            )
+
+            success_message = (
+                f"Emergency issue completed successfully. "
+                f"{result['quantity']} O- blood unit(s) "
+                f"were issued. "
+                f"{result['remaining_quantity']} "
+                f"O- unit(s) remain in inventory."
+            )
+
+        except ValueError as error:
+            error_message = str(error)
+
+    o_negative_stock = blood_bank.get_stock_count(
+        "O-"
+    )
+
+    return render_template(
+        "emergency.html",
+        o_negative_stock=o_negative_stock,
+        success_message=success_message,
+        error_message=error_message
+    )
+
+
+
+
+
+
+
 
 # --------------------------------------------------
 # Run application

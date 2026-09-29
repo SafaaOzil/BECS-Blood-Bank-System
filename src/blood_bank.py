@@ -367,13 +367,35 @@ class BloodBank:
     # Emergency MCI
     # --------------------------------------------------
 
-    def issue_emergency_blood(self):
+    def issue_emergency_blood(self, quantity):
         """
-        Issue all available O- blood units
-        for a mass casualty emergency event.
+        Issue O- blood units for a mass casualty emergency.
+
+        The user may choose any quantity from 1 up to
+        the maximum number of O- units currently available.
         """
 
         emergency_blood_type = "O-"
+
+        if not isinstance(quantity, int) or quantity <= 0:
+            raise ValueError(
+                "Emergency quantity must be a positive integer."
+            )
+
+        available_quantity = self.get_stock_count(
+            emergency_blood_type
+        )
+
+        if available_quantity == 0:
+            raise ValueError(
+                "No O- blood units available for emergency."
+            )
+
+        if quantity > available_quantity:
+            raise ValueError(
+                f"Only {available_quantity} O- blood unit(s) "
+                f"are currently available."
+            )
 
         units = (
             BloodUnitModel.query
@@ -381,19 +403,13 @@ class BloodBank:
                 blood_type=emergency_blood_type
             )
             .order_by(BloodUnitModel.id.asc())
+            .limit(quantity)
             .all()
         )
-
-        if not units:
-            raise ValueError(
-                "No O- blood units available for emergency."
-            )
 
         issued_unit_ids = [
             unit.id for unit in units
         ]
-
-        quantity = len(units)
 
         for unit in units:
             db.session.delete(unit)
@@ -404,5 +420,7 @@ class BloodBank:
             "success": True,
             "issued_type": emergency_blood_type,
             "quantity": quantity,
-            "unit_ids": issued_unit_ids
+            "unit_ids": issued_unit_ids,
+            "remaining_quantity":
+                available_quantity - quantity
         }

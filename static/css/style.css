@@ -494,3 +494,94 @@ body {
 .partial-button:hover {
     background-color: #b45309;
 }
+
+
+
+/* ---------------- Emergency MCI ---------------- */
+
+.emergency-container {
+    max-width: 650px;
+
+    background-color: #ffffff;
+
+    padding: 30px;
+
+    border-radius: 12px;
+
+    border: 1px solid #e5e7eb;
+
+    box-shadow:
+        0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.emergency-status {
+    text-align: center;
+
+    padding: 25px;
+
+    margin-bottom: 25px;
+
+    background-color: #f9fafb;
+
+    border: 1px solid #e5e7eb;
+
+    border-radius: 10px;
+}
+
+.emergency-blood-type {
+    font-size: 32px;
+
+    font-weight: bold;
+
+    color: #b91c1c;
+}
+
+.emergency-stock {
+    margin-top: 10px;
+
+    font-size: 42px;
+
+    font-weight: bold;
+}
+
+.emergency-stock-label {
+    margin-top: 5px;
+
+    color: #6b7280;
+}
+
+.emergency-button {
+    width: 100%;
+
+    padding: 14px 20px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background-color: #991b1b;
+
+    color: #ffffff;
+
+    font-size: 16px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.emergency-button:hover {
+    background-color: #7f1d1d;
+}
+
+
+
+.field-help {
+    display: block;
+
+    margin-top: 7px;
+
+    color: #6b7280;
+
+    font-size: 13px;
+}
