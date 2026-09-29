@@ -32,11 +32,19 @@ class BloodBank:
             raise ValueError("Donation date is required.")
 
         try:
-            datetime.strptime(donation_date, "%d/%m/%Y")
+            parsed_date = datetime.strptime(
+                donation_date,
+                "%d/%m/%Y"
+            ).date()
         except ValueError:
             raise ValueError(
-                "Donation date must be in DD/MM/YYYY format."
+               "Donation date must be in DD/MM/YYYY format."
             )
+
+        if parsed_date > datetime.now().date():
+            raise ValueError(
+               "Donation date cannot be in the future."
+    )
 
         if not donor_id.strip():
             raise ValueError("Donor ID is required.")

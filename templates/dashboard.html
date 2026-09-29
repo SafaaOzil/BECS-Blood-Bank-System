@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}
+Dashboard - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="dashboard-header">
+    <h2>Blood Bank Dashboard</h2>
+
+    <p>
+        Current blood inventory overview
+    </p>
+</section>
+
+
+<section class="inventory-section">
+
+    <h3>Current Blood Inventory</h3>
+
+    <div class="blood-grid">
+
+        {% for blood_type, quantity in inventory.items() %}
+
+            <div class="blood-card">
+
+                <div class="blood-type">
+                    {{ blood_type }}
+                </div>
+
+                <div class="blood-quantity">
+                    {{ quantity }}
+                </div>
+
+                <div class="blood-unit-label">
+                    {% if quantity == 1 %}
+                        unit available
+                    {% else %}
+                        units available
+                    {% endif %}
+                </div>
+
+            </div>
+
+        {% endfor %}
+
+    </div>
+
+</section>
+
+
+<section class="dashboard-actions">
+
+    <h3>Quick Actions</h3>
+
+    <div class="action-grid">
+
+        <a href="/donation" class="action-card">
+            <h4>Blood Donation</h4>
+            <p>Register a new blood donation.</p>
+        </a>
+
+        <a href="/routine-issue" class="action-card">
+            <h4>Routine Blood Issue</h4>
+            <p>Issue blood for routine treatment.</p>
+        </a>
+
+        <a href="/emergency" class="action-card emergency-action">
+            <h4>Emergency MCI</h4>
+            <p>Emergency release of O- blood units.</p>
+        </a>
+
+    </div>
+
+</section>
+
+{% endblock %}

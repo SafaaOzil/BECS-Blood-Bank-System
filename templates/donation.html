@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}
+Blood Donation - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="page-header">
+    <h2>Blood Donation</h2>
+    <p>Register a new blood donation in the blood bank.</p>
+</section>
+
+
+<div class="form-container">
+
+    {% if success_message %}
+        <div class="alert alert-success">
+            {{ success_message }}
+        </div>
+    {% endif %}
+
+    {% if error_message %}
+        <div class="alert alert-error">
+            {{ error_message }}
+        </div>
+    {% endif %}
+
+
+    <form method="POST" action="/donation">
+
+        <div class="form-group">
+            <label for="blood_type">
+                Blood Type
+            </label>
+
+            <select
+                id="blood_type"
+                name="blood_type"
+                required
+            >
+                <option value="">
+                    Select blood type
+                </option>
+
+                {% for blood_type in blood_types %}
+                    <option
+                        value="{{ blood_type }}"
+                        {% if form_data.get('blood_type') == blood_type %}
+                            selected
+                        {% endif %}
+                    >
+                        {{ blood_type }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+
+        <div class="form-group">
+            <label for="donation_date">
+                Donation Date
+            </label>
+
+            <input
+                type="text"
+                id="donation_date"
+                name="donation_date"
+                placeholder="DD/MM/YYYY"
+                value="{{ form_data.get('donation_date', '') }}"
+                required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label for="donor_id">
+                Donor ID
+            </label>
+
+            <input
+                type="text"
+                id="donor_id"
+                name="donor_id"
+                maxlength="9"
+                placeholder="9-digit ID"
+                value="{{ form_data.get('donor_id', '') }}"
+                required
+            >
+        </div>
+
+
+        <div class="form-group">
+            <label for="donor_name">
+                Donor Full Name
+            </label>
+
+            <input
+                type="text"
+                id="donor_name"
+                name="donor_name"
+                placeholder="Enter donor full name"
+                value="{{ form_data.get('donor_name', '') }}"
+                required
+            >
+        </div>
+
+
+        <button type="submit" class="primary-button">
+            Register Donation
+        </button>
+
+    </form>
+
+</div>
+
+{% endblock %}
