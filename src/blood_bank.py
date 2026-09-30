@@ -95,7 +95,8 @@ class BloodBank:
             raise ValueError("Invalid blood type.")
 
         return BloodUnitModel.query.filter_by(
-            blood_type=blood_type
+            blood_type=blood_type,
+            status="AVAILABLE"
         ).count()
 
     def get_inventory_summary(self):
@@ -331,23 +332,29 @@ class BloodBank:
                 continue
 
             units = (
-                BloodUnitModel.query
-                .filter_by(blood_type=blood_type)
-                .order_by(BloodUnitModel.id.asc())
-                .limit(quantity)
-                .all()
+            BloodUnitModel.query
+            .filter_by(
+                blood_type=blood_type,
+                status="AVAILABLE"
             )
+            .order_by(BloodUnitModel.id.asc())
+            .limit(quantity)
+            .all()
+        )
+
 
             for unit in units:
+
                 issued_units.append({
                     "id": unit.id,
                     "blood_type": unit.blood_type
                 })
 
-                db.session.delete(unit)
+                unit.status = "ISSUED"
+                unit.issued_at = datetime.now()
+
 
         db.session.commit()
-
         return {
             "success": True,
             "requested_type": requested_type,
@@ -396,11 +403,11 @@ class BloodBank:
                 f"Only {available_quantity} O- blood unit(s) "
                 f"are currently available."
             )
-
         units = (
             BloodUnitModel.query
             .filter_by(
-                blood_type=emergency_blood_type
+                blood_type=emergency_blood_type,
+                status="AVAILABLE"
             )
             .order_by(BloodUnitModel.id.asc())
             .limit(quantity)
@@ -412,7 +419,9 @@ class BloodBank:
         ]
 
         for unit in units:
-            db.session.delete(unit)
+
+            unit.status = "ISSUED"
+            unit.issued_at = datetime.now()
 
         db.session.commit()
 
