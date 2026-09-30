@@ -1,6 +1,12 @@
 from flask import Flask, render_template, request
 from src.blood_bank import BloodBank
-from src.models import db, AuditLogModel
+from src.models import (
+    db,
+    AuditLogModel,
+    BloodUnitModel,
+    RoutineRequestModel,
+    EmergencyMCIModel
+)
 from src.blood_types import BLOOD_TYPES
 
 
@@ -58,7 +64,133 @@ def audit_trail():
         audit_logs=audit_logs
     )
 
+# --------------------------------------------------
+# Records History
+# --------------------------------------------------
 
+@app.route("/records-history")
+def records_history():
+
+    blood_units = (
+        BloodUnitModel.query
+        .order_by(BloodUnitModel.id.desc())
+        .all()
+    )
+
+    routine_requests = (
+        RoutineRequestModel.query
+        .order_by(RoutineRequestModel.created_at.desc())
+        .all()
+    )
+
+    emergency_records = (
+        EmergencyMCIModel.query
+        .order_by(EmergencyMCIModel.created_at.desc())
+        .all()
+    )
+
+    return render_template(
+        "records_history.html",
+        blood_units=blood_units,
+        routine_requests=routine_requests,
+        emergency_records=emergency_records
+    )
+
+
+
+# --------------------------------------------------
+# Statistics
+# --------------------------------------------------
+
+@app.route("/statistics")
+def statistics():
+
+    total_donations = BloodUnitModel.query.count()
+
+    available_units = (
+        BloodUnitModel.query
+        .filter_by(status="AVAILABLE")
+        .count()
+    )
+
+    issued_units = (
+        BloodUnitModel.query
+        .filter_by(status="ISSUED")
+        .count()
+    )
+
+    total_routine_requests = (
+        RoutineRequestModel.query.count()
+    )
+
+    total_routine_units = (
+        db.session.query(
+            db.func.sum(
+                RoutineRequestModel.issued_quantity
+            )
+        ).scalar() or 0
+    )
+
+    total_mci_events = (
+        EmergencyMCIModel.query.count()
+    )
+
+    total_mci_units = (
+        db.session.query(
+            db.func.sum(
+                EmergencyMCIModel.issued_quantity
+            )
+        ).scalar() or 0
+    )
+
+    blood_type_statistics = []
+
+    for blood_type in BLOOD_TYPES:
+
+        total = (
+            BloodUnitModel.query
+            .filter_by(
+                blood_type=blood_type
+            )
+            .count()
+        )
+
+        available = (
+            BloodUnitModel.query
+            .filter_by(
+                blood_type=blood_type,
+                status="AVAILABLE"
+            )
+            .count()
+        )
+
+        issued = (
+            BloodUnitModel.query
+            .filter_by(
+                blood_type=blood_type,
+                status="ISSUED"
+            )
+            .count()
+        )
+
+        blood_type_statistics.append({
+            "blood_type": blood_type,
+            "total": total,
+            "available": available,
+            "issued": issued
+        })
+
+    return render_template(
+        "statistics.html",
+        total_donations=total_donations,
+        available_units=available_units,
+        issued_units=issued_units,
+        total_routine_requests=total_routine_requests,
+        total_routine_units=total_routine_units,
+        total_mci_events=total_mci_events,
+        total_mci_units=total_mci_units,
+        blood_type_statistics=blood_type_statistics
+    )
 
 # --------------------------------------------------
 # Blood Donation

@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}
+Statistics - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="page-header">
+
+    <h2>Statistics</h2>
+
+    <p>
+        Summary of blood bank activity and
+        historical blood inventory records.
+    </p>
+
+</section>
+
+
+<div class="statistics-grid">
+
+    <div class="stat-card">
+        <h3>{{ total_donations }}</h3>
+        <p>Total Donations</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ available_units }}</h3>
+        <p>Available Units</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ issued_units }}</h3>
+        <p>Issued Units</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ total_routine_requests }}</h3>
+        <p>Routine Requests</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ total_routine_units }}</h3>
+        <p>Units Issued - Routine</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ total_mci_events }}</h3>
+        <p>MCI Events</p>
+    </div>
+
+    <div class="stat-card">
+        <h3>{{ total_mci_units }}</h3>
+        <p>Units Issued - MCI</p>
+    </div>
+
+</div>
+
+
+<section class="history-section">
+
+    <h3>Blood Type Statistics</h3>
+
+    <div class="history-table-wrapper">
+
+        <table class="history-table statistics-table">
+
+            <thead>
+
+                <tr>
+                    <th>Blood Type</th>
+                    <th>Total Donations</th>
+                    <th>Available</th>
+                    <th>Issued</th>
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                {% for item in blood_type_statistics %}
+
+                    <tr>
+
+                        <td>
+                            <strong>
+                                {{ item.blood_type }}
+                            </strong>
+                        </td>
+
+                        <td>
+                            {{ item.total }}
+                        </td>
+
+                        <td>
+                            {{ item.available }}
+                        </td>
+
+                        <td>
+                            {{ item.issued }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</section>
+
+{% endblock %}

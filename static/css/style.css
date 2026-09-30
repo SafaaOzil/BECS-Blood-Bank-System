@@ -667,3 +667,83 @@ body {
     min-width: 350px;
     line-height: 1.5;
 }
+
+
+/* --------------------------------------------------
+   Records History
+-------------------------------------------------- */
+
+.history-section {
+    margin-top: 35px;
+}
+
+.history-section h3 {
+    margin-bottom: 18px;
+}
+
+.history-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.history-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1000px;
+}
+
+.history-table th,
+.history-table td {
+    padding: 14px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd;
+}
+
+.history-table th {
+    background-color: #f3f4f6;
+    white-space: nowrap;
+}
+
+.history-table td {
+    overflow-wrap: anywhere;
+}
+
+
+
+/* --------------------------------------------------
+   Statistics
+-------------------------------------------------- */
+
+.statistics-grid {
+    display: grid;
+    grid-template-columns:
+        repeat(auto-fit, minmax(190px, 1fr));
+    gap: 20px;
+    margin-top: 25px;
+    margin-bottom: 40px;
+}
+
+.stat-card {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    border: 1px solid #ddd;
+}
+
+.stat-card h3 {
+    font-size: 32px;
+    margin: 0 0 10px;
+}
+
+.stat-card p {
+    margin: 0;
+}
+
+.statistics-table {
+    min-width: 600px;
+}
