@@ -1,4 +1,9 @@
-from flask import Flask, render_template, request
+from flask import (
+    Flask,
+    render_template,
+    request,
+    Response
+)
 from src.blood_bank import BloodBank
 from src.models import (
     db,
@@ -7,6 +12,8 @@ from src.models import (
     RoutineRequestModel,
     EmergencyMCIModel
 )
+from src.export_service import ExportService
+from src.audit_service import AuditService
 from src.blood_types import BLOOD_TYPES
 
 
@@ -191,6 +198,42 @@ def statistics():
         total_mci_units=total_mci_units,
         blood_type_statistics=blood_type_statistics
     )
+
+
+
+# --------------------------------------------------
+# Export Records
+# --------------------------------------------------
+
+@app.route("/export/xml")
+def export_xml():
+
+    AuditService.log_action(
+        action="RECORDS_EXPORTED",
+        record_type="SYSTEM_EXPORT",
+        record_id=None,
+        details=(
+            "All BECS records were exported "
+            "to XML format."
+        )
+    )
+
+    db.session.commit()
+
+    xml_data = ExportService.create_xml_export()
+
+    filename = "BECS_records_export.xml"
+
+    return Response(
+        xml_data,
+        mimetype="application/xml",
+        headers={
+            "Content-Disposition":
+                f'attachment; filename="{filename}"'
+        }
+    )
+
+
 
 # --------------------------------------------------
 # Blood Donation

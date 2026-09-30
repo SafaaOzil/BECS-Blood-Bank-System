@@ -747,3 +747,14 @@ body {
 .statistics-table {
     min-width: 600px;
 }
+
+
+/* --------------------------------------------------
+   Records Export
+-------------------------------------------------- */
+
+.export-button {
+    display: inline-block;
+    margin-top: 15px;
+    text-decoration: none;
+}
