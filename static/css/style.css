@@ -618,3 +618,52 @@ body {
     line-height: 1.7;
     color: #4b5563;
 }
+
+
+
+
+/* --------------------------------------------------
+   Audit Trail
+-------------------------------------------------- */
+
+.audit-container {
+    max-width: 1400px;
+    margin: 0 auto;
+}
+
+.audit-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.audit-table th,
+.audit-table td {
+    padding: 14px;
+    text-align: left;
+    vertical-align: top;
+    border-bottom: 1px solid #ddd;
+}
+
+.audit-table th {
+    background-color: #f3f4f6;
+}
+
+.audit-time {
+    width: 180px;
+    white-space: nowrap;
+}
+
+.audit-action {
+    width: 230px;
+    overflow-wrap: anywhere;
+}
+
+.audit-record {
+    width: 200px;
+    overflow-wrap: anywhere;
+}
+
+.audit-details {
+    min-width: 350px;
+    line-height: 1.5;
+}

@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}
+Audit Trail - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="page-header">
+
+    <h2>Audit Trail</h2>
+
+    <p>
+        Chronological record of important activities
+        performed in the BECS Blood Bank System.
+    </p>
+
+</section>
+
+
+<div class="form-container audit-container">
+
+    {% if audit_logs %}
+
+        <table class="audit-table">
+
+            <thead>
+                <tr>
+                    <th class="audit-time">Time</th>
+                    <th class="audit-action">Action</th>
+                    <th class="audit-record">Record</th>
+                    <th class="audit-details">Details</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+                {% for log in audit_logs %}
+
+                    <tr>
+
+                        <td class="audit-time">
+                            {{ log.timestamp.strftime(
+                                '%d/%m/%Y %H:%M:%S'
+                            ) }}
+                        </td>
+
+                        <td class="audit-action">
+                            {{ log.action }}
+                        </td>
+
+                        <td class="audit-record">
+                            {{ log.record_type }}
+                            #{{ log.record_id }}
+                        </td>
+
+                        <td class="audit-details">
+                            {{ log.details }}
+                        </td>
+
+                    </tr>
+
+                {% endfor %}
+
+            </tbody>
+
+        </table>
+
+    {% else %}
+
+        <div class="alert alert-warning">
+            No audit records are available.
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

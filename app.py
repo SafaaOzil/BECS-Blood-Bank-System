@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request
 from src.blood_bank import BloodBank
-from src.models import db
+from src.models import db, AuditLogModel
 from src.blood_types import BLOOD_TYPES
 
 
@@ -39,6 +39,27 @@ def dashboard():
         "dashboard.html",
         inventory=inventory
     )
+
+# --------------------------------------------------
+# Audit Trail
+# --------------------------------------------------
+
+@app.route("/audit-trail")
+def audit_trail():
+
+    audit_logs = (
+        AuditLogModel.query
+        .order_by(AuditLogModel.timestamp.desc())
+        .all()
+    )
+
+    return render_template(
+        "audit_trail.html",
+        audit_logs=audit_logs
+    )
+
+
+
 # --------------------------------------------------
 # Blood Donation
 # --------------------------------------------------
