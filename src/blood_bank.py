@@ -9,7 +9,8 @@ from src.blood_types import (
 from src.models import (
     db,
     BloodUnitModel,
-    RoutineRequestModel
+    RoutineRequestModel,  
+    EmergencyMCIModel
 )
 from src.audit_service import AuditService
 
@@ -485,6 +486,7 @@ class BloodBank:
                 f"Only {available_quantity} O- blood unit(s) "
                 f"are currently available."
             )
+
         units = (
             BloodUnitModel.query
             .filter_by(
@@ -501,17 +503,47 @@ class BloodBank:
         ]
 
         for unit in units:
-
             unit.status = "ISSUED"
             unit.issued_at = datetime.now()
+
+        remaining_quantity = (
+            available_quantity - quantity
+        )
+
+        emergency_record = EmergencyMCIModel(
+            available_before_issue=available_quantity,
+            requested_quantity=quantity,
+            issued_quantity=quantity,
+            remaining_after_issue=remaining_quantity
+        )
+
+        db.session.add(emergency_record)
+
+        # Generate the MCI record ID before the final commit.
+        db.session.flush()
+
+        AuditService.log_action(
+            action="EMERGENCY_MCI_ISSUE",
+            record_type="EMERGENCY_MCI",
+            record_id=emergency_record.id,
+            details=(
+                f"Emergency MCI blood issue completed. "
+                f"O- available before issue: "
+                f"{available_quantity}. "
+                f"Requested quantity: {quantity}. "
+                f"Issued quantity: {quantity}. "
+                f"O- remaining after issue: "
+                f"{remaining_quantity}."
+            )
+        )
 
         db.session.commit()
 
         return {
             "success": True,
+            "mci_record_id": emergency_record.id,
             "issued_type": emergency_blood_type,
             "quantity": quantity,
             "unit_ids": issued_unit_ids,
-            "remaining_quantity":
-                available_quantity - quantity
+            "remaining_quantity": remaining_quantity
         }
