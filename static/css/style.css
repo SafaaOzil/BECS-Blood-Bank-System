@@ -758,3 +758,43 @@ body {
     margin-top: 15px;
     text-decoration: none;
 }
+
+
+
+
+
+/* --------------------------------------------------
+   Filters
+-------------------------------------------------- */
+
+.filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: end;
+    gap: 15px;
+    background: white;
+    padding: 20px;
+    margin-bottom: 25px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+}
+
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.filter-group input,
+.filter-group select {
+    min-width: 220px;
+    padding: 10px;
+}
+
+.secondary-button {
+    display: inline-block;
+    padding: 10px 18px;
+    text-decoration: none;
+    border: 1px solid #aaa;
+    border-radius: 6px;
+}

@@ -24,6 +24,97 @@ Records History - BECS
 
 </section>
 
+<form
+    method="GET"
+    action="/records-history"
+    class="filter-form"
+>
+
+    <div class="filter-group">
+
+        <label for="record_type">
+            Record Type
+        </label>
+
+        <select
+            id="record_type"
+            name="record_type"
+        >
+
+            <option
+                value="all"
+                {% if record_type == 'all' %}
+                    selected
+                {% endif %}
+            >
+                All Records
+            </option>
+
+            <option
+                value="donations"
+                {% if record_type == 'donations' %}
+                    selected
+                {% endif %}
+            >
+                Blood Donations
+            </option>
+
+            <option
+                value="routine"
+                {% if record_type == 'routine' %}
+                    selected
+                {% endif %}
+            >
+                Routine Requests
+            </option>
+
+            <option
+                value="emergency"
+                {% if record_type == 'emergency' %}
+                    selected
+                {% endif %}
+            >
+                Emergency MCI
+            </option>
+
+        </select>
+
+    </div>
+
+
+    <div class="filter-group">
+
+        <label for="search">
+            Search
+        </label>
+
+        <input
+            type="text"
+            id="search"
+            name="search"
+            value="{{ search_text }}"
+            placeholder="Name, ID, blood type, destination..."
+        >
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="primary-button"
+    >
+        Apply Filters
+    </button>
+
+    <a
+        href="/records-history"
+        class="secondary-button"
+    >
+        Clear
+    </a>
+
+</form>
+
 
 <!-- ==============================================
      Donation History

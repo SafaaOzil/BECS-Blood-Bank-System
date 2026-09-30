@@ -60,15 +60,63 @@ def dashboard():
 @app.route("/audit-trail")
 def audit_trail():
 
+    selected_action = request.args.get(
+        "action",
+        ""
+    ).strip()
+
+    search_text = request.args.get(
+        "search",
+        ""
+    ).strip()
+
+    query = AuditLogModel.query
+
+    if selected_action:
+
+        query = query.filter(
+            AuditLogModel.action == selected_action
+        )
+
+    if search_text:
+
+        search_pattern = f"%{search_text}%"
+
+        query = query.filter(
+            db.or_(
+                AuditLogModel.details.ilike(
+                    search_pattern
+                ),
+                AuditLogModel.record_type.ilike(
+                    search_pattern
+                ),
+                AuditLogModel.record_id.ilike(
+                    search_pattern
+                )
+            )
+        )
+
     audit_logs = (
-        AuditLogModel.query
-        .order_by(AuditLogModel.timestamp.desc())
+        query
+        .order_by(
+            AuditLogModel.timestamp.desc()
+        )
         .all()
     )
 
+    available_actions = [
+        "DONATION_CREATED",
+        "ROUTINE_ISSUE_COMPLETED",
+        "EMERGENCY_MCI_ISSUE",
+        "RECORDS_EXPORTED"
+    ]
+
     return render_template(
         "audit_trail.html",
-        audit_logs=audit_logs
+        audit_logs=audit_logs,
+        available_actions=available_actions,
+        selected_action=selected_action,
+        search_text=search_text
     )
 
 # --------------------------------------------------
@@ -78,31 +126,112 @@ def audit_trail():
 @app.route("/records-history")
 def records_history():
 
+    record_type = request.args.get(
+        "record_type",
+        "all"
+    ).strip()
+
+    search_text = request.args.get(
+        "search",
+        ""
+    ).strip()
+
+    # --------------------------------------------------
+    # Blood Donation Records
+    # --------------------------------------------------
+
+    blood_query = BloodUnitModel.query
+
+    if search_text:
+
+        search_pattern = f"%{search_text}%"
+
+        blood_query = blood_query.filter(
+            db.or_(
+                BloodUnitModel.blood_type.ilike(
+                    search_pattern
+                ),
+                BloodUnitModel.donor_id.ilike(
+                    search_pattern
+                ),
+                BloodUnitModel.donor_name.ilike(
+                    search_pattern
+                ),
+                BloodUnitModel.status.ilike(
+                    search_pattern
+                )
+            )
+        )
+
     blood_units = (
-        BloodUnitModel.query
+        blood_query
         .order_by(BloodUnitModel.id.desc())
         .all()
+        if record_type in ("all", "donations")
+        else []
     )
+
+    # --------------------------------------------------
+    # Routine Request Records
+    # --------------------------------------------------
+
+    routine_query = RoutineRequestModel.query
+
+    if search_text:
+
+        search_pattern = f"%{search_text}%"
+
+        routine_query = routine_query.filter(
+            db.or_(
+                RoutineRequestModel.requested_blood_type.ilike(
+                    search_pattern
+                ),
+                RoutineRequestModel.destination.ilike(
+                    search_pattern
+                ),
+                RoutineRequestModel.issued_details.ilike(
+                    search_pattern
+                ),
+                RoutineRequestModel.status.ilike(
+                    search_pattern
+                )
+            )
+        )
 
     routine_requests = (
-        RoutineRequestModel.query
-        .order_by(RoutineRequestModel.created_at.desc())
+        routine_query
+        .order_by(
+            RoutineRequestModel.created_at.desc()
+        )
         .all()
+        if record_type in ("all", "routine")
+        else []
     )
 
-    emergency_records = (
-        EmergencyMCIModel.query
-        .order_by(EmergencyMCIModel.created_at.desc())
-        .all()
-    )
+    # --------------------------------------------------
+    # Emergency MCI Records
+    # --------------------------------------------------
+
+    emergency_records = []
+
+    if record_type in ("all", "emergency"):
+
+        emergency_records = (
+            EmergencyMCIModel.query
+            .order_by(
+                EmergencyMCIModel.created_at.desc()
+            )
+            .all()
+        )
 
     return render_template(
         "records_history.html",
         blood_units=blood_units,
         routine_requests=routine_requests,
-        emergency_records=emergency_records
+        emergency_records=emergency_records,
+        record_type=record_type,
+        search_text=search_text
     )
-
 
 
 # --------------------------------------------------

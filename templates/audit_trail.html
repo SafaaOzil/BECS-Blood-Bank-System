@@ -19,6 +19,80 @@ Audit Trail - BECS
 </section>
 
 
+<form
+    method="GET"
+    action="/audit-trail"
+    class="filter-form"
+>
+
+    <div class="filter-group">
+
+        <label for="action">
+            Action
+        </label>
+
+        <select
+            id="action"
+            name="action"
+        >
+
+            <option value="">
+                All Actions
+            </option>
+
+            {% for action in available_actions %}
+
+                <option
+                    value="{{ action }}"
+                    {% if selected_action == action %}
+                        selected
+                    {% endif %}
+                >
+                    {{ action }}
+                </option>
+
+            {% endfor %}
+
+        </select>
+
+    </div>
+
+
+    <div class="filter-group">
+
+        <label for="search">
+            Search
+        </label>
+
+        <input
+            type="text"
+            id="search"
+            name="search"
+            value="{{ search_text }}"
+            placeholder="Record type, ID or details"
+        >
+
+    </div>
+
+
+    <button
+        type="submit"
+        class="primary-button"
+    >
+        Apply Filters
+    </button>
+
+    <a
+        href="/audit-trail"
+        class="secondary-button"
+    >
+        Clear
+    </a>
+
+</form>
+
+
+
 <div class="form-container audit-container">
 
     {% if audit_logs %}
