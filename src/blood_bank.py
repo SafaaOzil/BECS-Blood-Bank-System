@@ -6,9 +6,12 @@ from src.blood_types import (
     get_compatible_donors
 )
 
-from src.models import db, BloodUnitModel
+from src.models import (
+    db,
+    BloodUnitModel,
+    RoutineRequestModel
+)
 from src.audit_service import AuditService
-
 
 class BloodBank:
     """
@@ -229,7 +232,9 @@ class BloodBank:
         self,
         requested_type,
         requested_quantity,
-        selected_quantities
+        selected_quantities,
+        destination
+
     ):
         """
         Validate and issue the user's selected blood plan.
@@ -258,6 +263,13 @@ class BloodBank:
                 "Requested quantity must be a positive integer."
             )
 
+        if not destination or not destination.strip():
+            raise ValueError(
+                "Destination is required."
+            )
+
+        destination = destination.strip()
+        
         compatible_donors = get_compatible_donors(
             requested_type
         )
@@ -370,20 +382,74 @@ class BloodBank:
                 unit.issued_at = datetime.now()
 
 
+                issued_by_type = {
+            blood_type: quantity
+            for blood_type, quantity
+            in clean_selection.items()
+            if quantity > 0
+        }
+
+        issued_details = ", ".join(
+            f"{blood_type}: {quantity}"
+            for blood_type, quantity
+            in issued_by_type.items()
+        )
+
+        is_partial = (
+            selected_total < requested_quantity
+        )
+
+        routine_request = RoutineRequestModel(
+            requested_blood_type=requested_type,
+            requested_quantity=requested_quantity,
+            destination=destination,
+            issued_quantity=selected_total,
+            issued_details=issued_details,
+            status=(
+                "PARTIAL"
+                if is_partial
+                else "COMPLETED"
+            ),
+            completed_at=datetime.now()
+        )
+
+        db.session.add(routine_request)
+
+        # Obtain the request ID before the final commit.
+        db.session.flush()
+
+        AuditService.log_action(
+            action="ROUTINE_ISSUE_COMPLETED",
+            record_type="ROUTINE_REQUEST",
+            record_id=routine_request.id,
+            details=(
+                f"Routine blood request completed. "
+                f"Requested blood type: "
+                f"{requested_type}. "
+                f"Requested quantity: "
+                f"{requested_quantity}. "
+                f"Destination: {destination}. "
+                f"Issued quantity: "
+                f"{selected_total}. "
+                f"Issued blood: "
+                f"{issued_details}. "
+                f"Status: "
+                f"{routine_request.status}."
+            )
+        )
+
         db.session.commit()
+
         return {
             "success": True,
+            "request_id": routine_request.id,
             "requested_type": requested_type,
             "requested_quantity": requested_quantity,
+            "destination": destination,
             "issued_quantity": selected_total,
-            "partial": selected_total < requested_quantity,
+            "partial": is_partial,
             "issued_units": issued_units,
-            "issued_by_type": {
-                blood_type: quantity
-                for blood_type, quantity
-                in clean_selection.items()
-                if quantity > 0
-            }
+            "issued_by_type": issued_by_type
         }
 
     # --------------------------------------------------

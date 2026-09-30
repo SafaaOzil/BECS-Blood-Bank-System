@@ -128,16 +128,28 @@ def routine_issue():
             ""
         ).strip()
 
-        try:
-            quantity = int(quantity_text)
+        destination = request.form.get(
+            "destination",
+            ""
+        ).strip()
 
-            issue_plan = blood_bank.create_issue_plan(
-                requested_type,
-                quantity
-            )
 
-        except ValueError as error:
-            error_message = str(error)
+        if not destination:
+
+            error_message = "Destination is required."
+
+        else:
+
+            try:
+                quantity = int(quantity_text)
+
+                issue_plan = blood_bank.create_issue_plan(
+                    requested_type,
+                    quantity
+                )
+
+            except ValueError as error:
+                error_message = str(error)
 
     return render_template(
         "routine_issue.html",
@@ -166,7 +178,16 @@ def confirm_routine_issue():
         ""
     ).strip()
 
+    destination = request.form.get(
+        "destination",
+        ""
+    ).strip()
+
     try:
+        if not destination:
+            raise ValueError(
+                "Destination is required."
+            )
         requested_quantity = int(
             requested_quantity_text
         )
@@ -199,8 +220,17 @@ def confirm_routine_issue():
         result = blood_bank.confirm_issue_plan(
             requested_type,
             requested_quantity,
-            selected_quantities
+            selected_quantities,
+            destination
         )
+        issued_details = ", ".join(
+            f"{blood_type}: {quantity}"
+            for blood_type, quantity
+            in result["issued_by_type"].items()
+        )
+        
+
+
 
         issued_description = ", ".join(
             f"{quantity} × {blood_type}"
@@ -252,7 +282,8 @@ def confirm_routine_issue():
             issue_plan=issue_plan,
             form_data={
                 "requested_type": requested_type,
-                "quantity": requested_quantity_text
+                "quantity": requested_quantity_text,
+                "destination": destination
             }
         )
 

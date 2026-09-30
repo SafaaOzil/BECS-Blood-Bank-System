@@ -87,6 +87,63 @@ Routine Blood Issue - BECS
 
         </div>
 
+                <div class="form-group">
+
+            <label for="destination">
+                Destination
+            </label>
+
+            <select
+                id="destination"
+                name="destination"
+                required
+            >
+
+                <option value="">
+                    Select destination
+                </option>
+
+                <option
+                    value="Operating Room"
+                    {% if form_data.get('destination') == 'Operating Room' %}
+                        selected
+                    {% endif %}
+                >
+                    Operating Room
+                </option>
+
+                <option
+                    value="Trauma"
+                    {% if form_data.get('destination') == 'Trauma' %}
+                        selected
+                    {% endif %}
+                >
+                    Trauma
+                </option>
+
+                <option
+                    value="Emergency Department"
+                    {% if form_data.get('destination') == 'Emergency Department' %}
+                        selected
+                    {% endif %}
+                >
+                    Emergency Department
+                </option>
+
+                <option
+                    value="Other"
+                    {% if form_data.get('destination') == 'Other' %}
+                        selected
+                    {% endif %}
+                >
+                    Other
+                </option>
+
+            </select>
+
+        </div>
+
+
 
         <button
             type="submit"
@@ -197,6 +254,12 @@ Routine Blood Issue - BECS
             value="{{ issue_plan.requested_quantity }}"
         >
 
+        
+                <input
+            type="hidden"
+            name="destination"
+            value="{{ form_data.get('destination', '') }}"
+        >
 
         <div class="selection-table">
 

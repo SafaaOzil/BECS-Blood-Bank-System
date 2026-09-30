@@ -100,6 +100,11 @@ class RoutineRequestModel(db.Model):
         default=0
     )
 
+    issued_details = db.Column(
+    db.Text,
+    nullable=True
+    )
+
     status = db.Column(
         db.String(20),
         nullable=False,
