@@ -7,6 +7,7 @@ from src.blood_types import (
 )
 
 from src.models import db, BloodUnitModel
+from src.audit_service import AuditService
 
 
 class BloodBank:
@@ -77,6 +78,21 @@ class BloodBank:
         )
 
         db.session.add(unit)
+
+        # Generate the database ID before the final commit.
+        db.session.flush()
+
+        AuditService.log_action(
+            action="DONATION_CREATED",
+            record_type="BLOOD_UNIT",
+            record_id=unit.id,
+            details=(
+                f"Blood donation registered. "
+                f"Blood type: {unit.blood_type}. "
+                f"Donation date: {unit.donation_date}."
+            )
+        )
+
         db.session.commit()
 
         return unit
