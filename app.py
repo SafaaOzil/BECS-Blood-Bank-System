@@ -5,7 +5,8 @@ from flask import (
     Response, 
     redirect, 
     url_for, 
-    session
+    session,
+    abort
 )
 from src.auth import login_required, roles_required
 
@@ -78,13 +79,61 @@ def login():
         ).first()
 
         if user is None:
+
             error = "Invalid username or password."
+
+            AuditService.log_action(
+                action="LOGIN_FAILED",
+                record_type="AUTHENTICATION",
+                record_id=None,
+                details=(
+                    f"Failed login attempt for username "
+                    f"'{username}': unknown username."
+                ),
+                actor_username=username or None,
+                actor_role=None
+            )
+
+            db.session.commit()
+
 
         elif not user.is_active:
+
             error = "This account is disabled."
 
+            AuditService.log_action(
+                action="LOGIN_FAILED",
+                record_type="AUTHENTICATION",
+                record_id=user.id,
+                details=(
+                    f"Failed login attempt for disabled "
+                    f"user '{user.username}'."
+                ),
+                actor_username=user.username,
+                actor_role=user.role
+            )
+
+            db.session.commit()
+
+
         elif not user.check_password(password):
+
             error = "Invalid username or password."
+
+            AuditService.log_action(
+                action="LOGIN_FAILED",
+                record_type="AUTHENTICATION",
+                record_id=user.id,
+                details=(
+                    f"Failed login attempt for user "
+                    f"'{user.username}': invalid credentials."
+                ),
+                actor_username=user.username,
+                actor_role=user.role
+            )
+
+            db.session.commit()
+
 
         else:
             session.clear()
@@ -92,6 +141,18 @@ def login():
             session["user_id"] = user.id
             session["username"] = user.username
             session["role"] = user.role
+
+            AuditService.log_action(
+                action="LOGIN_SUCCESS",
+                record_type="AUTHENTICATION",
+                record_id=user.id,
+                details=(
+                    f"Successful login for user "
+                    f"'{user.username}'."
+                )
+            )
+
+            db.session.commit()
 
             return redirect(url_for("dashboard"))
 
@@ -105,9 +166,23 @@ def login():
 
 @app.route("/logout")
 def logout():
-    session.clear()
-    return redirect(url_for("login"))
 
+    if session.get("user_id"):
+
+        AuditService.log_action(
+            action="LOGOUT",
+            record_type="AUTHENTICATION",
+            record_id=session.get("user_id"),
+            details=(
+                f"User '{session.get('username')}' logged out."
+            )
+        )
+
+        db.session.commit()
+
+    session.clear()
+
+    return redirect(url_for("login"))
 
 # --------------------------------------------------
 # Dashboard
@@ -180,7 +255,13 @@ def audit_trail():
         "DONATION_CREATED",
         "ROUTINE_ISSUE_COMPLETED",
         "EMERGENCY_MCI_ISSUE",
-        "RECORDS_EXPORTED"
+        "RECORDS_EXPORTED",
+        "USER_CREATED",
+        "USER_DISABLED",
+        "USER_ENABLED",
+        "LOGIN_SUCCESS",
+        "LOGIN_FAILED",
+        "LOGOUT"
     ]
 
     return render_template(
@@ -772,8 +853,166 @@ def emergency():
 
 
 
+# --------------------------------------------------
+# Admin - User Management
+# --------------------------------------------------
+
+@app.route("/admin/users", methods=["GET", "POST"])
+@roles_required(ADMIN)
+def manage_users():
+
+    error = None
+    success = None
+
+    if request.method == "POST":
+
+        username = request.form.get(
+            "username",
+            ""
+        ).strip()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        role = request.form.get(
+            "role",
+            ""
+        ).strip()
+
+        # ------------------------------
+        # Validation
+        # ------------------------------
+
+        if not username:
+            error = "Username is required."
+
+        elif len(username) < 3:
+            error = "Username must contain at least 3 characters."
+
+        elif not password:
+            error = "Password is required."
+
+        elif len(password) < 8:
+            error = "Password must contain at least 8 characters."
+
+        elif role not in (
+            ADMIN,
+            BLOOD_BANK_USER,
+            RESEARCH_STUDENT
+        ):
+            error = "Invalid user role."
+
+        elif UserModel.query.filter_by(
+            username=username
+        ).first():
+
+            error = "Username already exists."
+
+        # ------------------------------
+        # Create User
+        # ------------------------------
+
+        else:
+
+            new_user = UserModel(
+                username=username,
+                role=role,
+                is_active=True
+            )
+
+            new_user.set_password(password)
+
+            db.session.add(new_user)
+
+            # Flush so the new user receives an ID
+            # before the audit record is created.
+            db.session.flush()
+
+            AuditService.log_action(
+                action="USER_CREATED",
+                record_type="USER",
+                record_id=new_user.id,
+                details=(
+                    f"User account '{new_user.username}' created "
+                    f"with role {new_user.role}."
+                )
+            )
+
+            db.session.commit()
+
+            success = "User created successfully."
+
+    users = (
+        UserModel.query
+        .order_by(UserModel.id.asc())
+        .all()
+    )
+
+    return render_template(
+        "admin_users.html",
+        users=users,
+        error=error,
+        success=success,
+        roles=[
+            ADMIN,
+            BLOOD_BANK_USER,
+            RESEARCH_STUDENT
+        ]
+    )
 
 
+
+
+# --------------------------------------------------
+# Admin - Enable / Disable User
+# --------------------------------------------------
+
+@app.route(
+    "/admin/users/<int:user_id>/toggle-status",
+    methods=["POST"]
+)
+@roles_required(ADMIN)
+def toggle_user_status(user_id):
+
+    user = db.session.get(
+        UserModel,
+        user_id
+    )
+
+    if user is None:
+        abort(404)
+
+    # Prevent the currently logged-in administrator
+    # from disabling their own account.
+    if user.id == session.get("user_id"):
+        abort(400)
+
+    user.is_active = not user.is_active
+
+    if user.is_active:
+        action = "USER_ENABLED"
+        status_text = "enabled"
+    else:
+        action = "USER_DISABLED"
+        status_text = "disabled"
+
+    AuditService.log_action(
+        action=action,
+        record_type="USER",
+        record_id=user.id,
+        details=(
+            f"User account '{user.username}' "
+            f"({user.role}) was {status_text}."
+        )
+    )
+
+    db.session.commit()
+
+    return redirect(
+        url_for("manage_users")
+    )
 
 # --------------------------------------------------
 # Run application

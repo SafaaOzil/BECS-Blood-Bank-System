@@ -179,7 +179,6 @@ class EmergencyMCIModel(db.Model):
 
 
 
-
 class AuditLogModel(db.Model):
     """
     Immutable audit trail record.
@@ -216,6 +215,16 @@ class AuditLogModel(db.Model):
         nullable=True
     )
 
+    actor_username = db.Column(
+        db.String(50),
+        nullable=True
+    )
+
+    actor_role = db.Column(
+        db.String(30),
+        nullable=True
+    )
+
     details = db.Column(
         db.Text,
         nullable=False
@@ -226,10 +235,9 @@ class AuditLogModel(db.Model):
             f"<AuditLogModel "
             f"id={self.id}, "
             f"action={self.action}, "
-            f"record_type={self.record_type}>"
+            f"record_type={self.record_type}, "
+            f"actor_username={self.actor_username}>"
         )
-
-
 
 class UserModel(db.Model):
         __tablename__ = "users"

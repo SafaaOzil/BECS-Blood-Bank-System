@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}
+User Management - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="page-header">
+
+    <h2>User Management</h2>
+
+    <p>
+        Create and manage authorized BECS system users.
+    </p>
+
+</section>
+
+
+<!-- ==============================================
+     Messages
+=============================================== -->
+
+{% if error %}
+
+    <div class="alert alert-error">
+        {{ error }}
+    </div>
+
+{% endif %}
+
+
+{% if success %}
+
+    <div class="alert alert-success">
+        {{ success }}
+    </div>
+
+{% endif %}
+
+
+<!-- ==============================================
+     Create User
+=============================================== -->
+
+<section class="history-section">
+
+    <h3>Create New User</h3>
+
+    <form
+        method="POST"
+        class="filter-form"
+    >
+
+        <div class="filter-group">
+
+            <label for="username">
+                Username
+            </label>
+
+            <input
+                type="text"
+                id="username"
+                name="username"
+                required
+                minlength="3"
+                autocomplete="off"
+            >
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="password">
+                Password
+            </label>
+
+            <input
+                type="password"
+                id="password"
+                name="password"
+                required
+                minlength="8"
+                autocomplete="new-password"
+            >
+
+        </div>
+
+
+        <div class="filter-group">
+
+            <label for="role">
+                Role
+            </label>
+
+            <select
+                id="role"
+                name="role"
+                required
+            >
+
+                {% for role in roles %}
+
+                    <option value="{{ role }}">
+                        {{ role }}
+                    </option>
+
+                {% endfor %}
+
+            </select>
+
+        </div>
+
+
+        <button
+            type="submit"
+            class="primary-button"
+        >
+            Create User
+        </button>
+
+    </form>
+
+</section>
+
+
+<!-- ==============================================
+     Existing Users
+=============================================== -->
+
+<section class="history-section">
+
+    <h3>Existing Users</h3>
+
+    {% if users %}
+
+        <div class="history-table-wrapper">
+
+            <table class="history-table">
+
+                <thead>
+
+                    <tr>
+                        <th>User ID</th>
+                        <th>Username</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>Created At</th>
+                        <th>Action</th>
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    {% for user in users %}
+
+                        <tr>
+
+                            <td>
+                                #{{ user.id }}
+                            </td>
+
+                            <td>
+                                {{ user.username }}
+                            </td>
+
+                            <td>
+                                {{ user.role }}
+                            </td>
+
+                            <td>
+
+                                {% if user.is_active %}
+
+                                    Active
+
+                                {% else %}
+
+                                    Disabled
+
+                                {% endif %}
+
+                            </td>
+
+                            <td>
+
+                                {{ user.created_at.strftime(
+                                    '%d/%m/%Y %H:%M:%S'
+                                ) }}
+
+                            </td>
+
+                            <td>
+
+                                {% if user.id ==
+                                    session.get("user_id") %}
+
+                                    Current User
+
+                                {% else %}
+
+                                    <form
+                                        method="POST"
+                                        action="{{ url_for(
+                                            'toggle_user_status',
+                                            user_id=user.id
+                                        ) }}"
+                                    >
+
+                                        <button
+                                            type="submit"
+                                            class="secondary-button"
+                                        >
+
+                                            {% if user.is_active %}
+
+                                                Disable
+
+                                            {% else %}
+
+                                                Enable
+
+                                            {% endif %}
+
+                                        </button>
+
+                                    </form>
+
+                                {% endif %}
+
+                            </td>
+
+                        </tr>
+
+                    {% endfor %}
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    {% else %}
+
+        <div class="alert alert-warning">
+            No users are available.
+        </div>
+
+    {% endif %}
+
+</section>
+
+{% endblock %}

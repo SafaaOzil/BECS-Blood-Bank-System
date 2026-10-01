@@ -104,6 +104,8 @@ Audit Trail - BECS
                     <th class="audit-time">Time</th>
                     <th class="audit-action">Action</th>
                     <th class="audit-record">Record</th>
+                    <th>User</th>
+                    <th>Role</th>
                     <th class="audit-details">Details</th>
                 </tr>
             </thead>
@@ -128,7 +130,17 @@ Audit Trail - BECS
                             {{ log.record_type }}
                             #{{ log.record_id }}
                         </td>
+                        
 
+                        <td>
+                            {{ log.actor_username or "Legacy/System" }}
+                        </td>
+
+                        <td>
+                            {{ log.actor_role or "-" }}
+                        </td>
+
+                        
                         <td class="audit-details">
                             {{ log.details }}
                         </td>
