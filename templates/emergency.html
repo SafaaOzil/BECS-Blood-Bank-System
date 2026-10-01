@@ -81,6 +81,7 @@ Emergency MCI - BECS
             method="POST"
             action="/emergency"
         >
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
             <div class="form-group">
 

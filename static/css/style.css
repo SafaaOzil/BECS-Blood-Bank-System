@@ -945,3 +945,77 @@ body {
 .logout-link:hover {
     background: #8e1616;
 }
+
+
+
+
+/* =========================
+   System Metadata
+   ========================= */
+
+.metadata-container {
+    width: 100%;
+    max-width: 900px;
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 12px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+}
+
+.metadata-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.metadata-table th,
+.metadata-table td {
+    padding: 16px 18px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.metadata-table th {
+    background-color: #f3f4f6;
+    font-weight: 600;
+}
+
+.metadata-table th:first-child {
+    border-radius: 8px 0 0 0;
+}
+
+.metadata-table th:last-child {
+    border-radius: 0 8px 0 0;
+}
+
+.metadata-table td:first-child {
+    font-weight: 500;
+    color: #374151;
+}
+
+.metadata-table td:last-child {
+    width: 180px;
+    font-weight: bold;
+    color: #b91c1c;
+}
+
+.metadata-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.metadata-table tbody tr:hover {
+    background-color: #f9fafb;
+}
+
+@media (max-width: 700px) {
+
+    .metadata-container {
+        padding: 18px;
+        overflow-x: auto;
+    }
+
+    .metadata-table th,
+    .metadata-table td {
+        padding: 13px;
+    }
+}

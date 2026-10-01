@@ -9,7 +9,7 @@ from flask import (
     abort
 )
 from src.auth import login_required, roles_required
-
+from datetime import timedelta
 from src.user_roles import (
     ADMIN,
     BLOOD_BANK_USER,
@@ -29,17 +29,25 @@ from src.export_service import ExportService
 from src.audit_service import AuditService
 from src.blood_types import BLOOD_TYPES
 import os
+from flask_wtf.csrf import CSRFProtect
+
+
 
 app = Flask(__name__)
 
 
 app.config["SECRET_KEY"] = os.environ.get(
     "BECS_SECRET_KEY",
-    "becs-development-secret-key"
+    "becs-development-secret-key-change-in-production"
 )
+
+csrf = CSRFProtect(app)
 
 app.config["SESSION_COOKIE_HTTPONLY"] = True
 app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(
+    minutes=30
+)
 
 
 
@@ -137,7 +145,7 @@ def login():
 
         else:
             session.clear()
-
+            session.permanent = True
             session["user_id"] = user.id
             session["username"] = user.username
             session["role"] = user.role
@@ -1013,6 +1021,65 @@ def toggle_user_status(user_id):
     return redirect(
         url_for("manage_users")
     )
+
+
+
+
+# --------------------------------------------------
+# Admin - System Metadata
+# --------------------------------------------------
+
+@app.route("/admin/metadata")
+@roles_required(ADMIN)
+def system_metadata():
+    print("DATABASE:", app.config["SQLALCHEMY_DATABASE_URI"])
+    print("USERS:", UserModel.query.count())
+    print("BLOOD UNITS:", BloodUnitModel.query.count())
+    print("AUDIT RECORDS:", AuditLogModel.query.count())
+
+    metadata = {
+        "total_users": UserModel.query.count(),
+
+        "active_users": UserModel.query.filter_by(
+            is_active=True
+        ).count(),
+
+        "total_blood_units": BloodUnitModel.query.count(),
+
+        "available_blood_units": BloodUnitModel.query.filter_by(
+            status="AVAILABLE"
+        ).count(),
+
+        "issued_blood_units": BloodUnitModel.query.filter_by(
+            status="ISSUED"
+        ).count(),
+
+        "total_routine_requests": RoutineRequestModel.query.count(),
+
+        "total_emergency_mci_records": EmergencyMCIModel.query.count(),
+
+        "total_audit_records": AuditLogModel.query.count()
+    }
+
+    return render_template(
+        "metadata.html",
+        metadata=metadata
+    )
+
+
+
+# --------------------------------------------------
+# Refresh session timeout
+# --------------------------------------------------
+
+@app.before_request
+def refresh_session_timeout():
+
+    if session.get("user_id"):
+        session.permanent = True
+        session.modified = True
+
+
 
 # --------------------------------------------------
 # Run application

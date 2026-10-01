@@ -29,7 +29,7 @@ Blood Donation - BECS
 
 
     <form method="POST" action="/donation">
-
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
             <label for="blood_type">
                 Blood Type

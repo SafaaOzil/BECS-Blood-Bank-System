@@ -34,7 +34,7 @@ Routine Blood Issue - BECS
 
 
     <form method="POST" action="/routine-issue">
-
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <div class="form-group">
 
             <label for="requested_type">
@@ -241,7 +241,7 @@ Routine Blood Issue - BECS
         method="POST"
         action="/confirm-routine-issue"
     >
-
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <input
             type="hidden"
             name="requested_type"

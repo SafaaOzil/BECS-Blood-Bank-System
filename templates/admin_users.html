@@ -52,6 +52,7 @@ User Management - BECS
         method="POST"
         class="filter-form"
     >
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
 
         <div class="filter-group">
 
@@ -210,7 +211,7 @@ User Management - BECS
                                             user_id=user.id
                                         ) }}"
                                     >
-
+<input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                         <button
                                             type="submit"
                                             class="secondary-button"

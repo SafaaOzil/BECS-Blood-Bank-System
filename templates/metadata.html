@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}
+System Metadata - BECS
+{% endblock %}
+
+
+{% block content %}
+
+<section class="page-header">
+
+    <h2>System Metadata</h2>
+
+    <p>
+        Administrative overview of BECS system records
+        and operational metadata.
+    </p>
+
+</section>
+
+
+<div class="metadata-container">
+
+    <table class="metadata-table">
+
+        <thead>
+            <tr>
+                <th>Metadata Item</th>
+                <th>Value</th>
+            </tr>
+        </thead>
+
+        <tbody>
+
+            <tr>
+                <td>Total Users</td>
+                <td>{{ metadata.total_users }}</td>
+            </tr>
+
+            <tr>
+                <td>Active Users</td>
+                <td>{{ metadata.active_users }}</td>
+            </tr>
+
+            <tr>
+                <td>Total Blood Units</td>
+                <td>{{ metadata.total_blood_units }}</td>
+            </tr>
+
+            <tr>
+                <td>Available Blood Units</td>
+                <td>{{ metadata.available_blood_units }}</td>
+            </tr>
+
+            <tr>
+                <td>Issued Blood Units</td>
+                <td>{{ metadata.issued_blood_units }}</td>
+            </tr>
+
+            <tr>
+                <td>Total Routine Requests</td>
+                <td>{{ metadata.total_routine_requests }}</td>
+            </tr>
+
+            <tr>
+                <td>Total Emergency MCI Records</td>
+                <td>{{ metadata.total_emergency_mci_records }}</td>
+            </tr>
+
+            <tr>
+                <td>Total Audit Records</td>
+                <td>{{ metadata.total_audit_records }}</td>
+            </tr>
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% endblock %}
