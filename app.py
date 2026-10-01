@@ -7,6 +7,7 @@ from flask import (
     url_for, 
     session
 )
+from src.auth import login_required
 from src.blood_bank import BloodBank
 from src.models import (
     db,
@@ -56,6 +57,9 @@ blood_bank = BloodBank()
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
+    if session.get("user_id"):
+        return redirect(url_for("dashboard"))
+    
     error = None
 
     if request.method == "POST":
@@ -103,6 +107,7 @@ def logout():
 # --------------------------------------------------
 
 @app.route("/")
+@login_required
 def dashboard():
 
     inventory = blood_bank.get_inventory_summary()
@@ -117,6 +122,7 @@ def dashboard():
 # --------------------------------------------------
 
 @app.route("/audit-trail")
+@login_required
 def audit_trail():
 
     selected_action = request.args.get(
@@ -183,6 +189,7 @@ def audit_trail():
 # --------------------------------------------------
 
 @app.route("/records-history")
+@login_required
 def records_history():
 
     record_type = request.args.get(
@@ -298,6 +305,7 @@ def records_history():
 # --------------------------------------------------
 
 @app.route("/statistics")
+@login_required
 def statistics():
 
     total_donations = BloodUnitModel.query.count()
@@ -394,6 +402,7 @@ def statistics():
 # --------------------------------------------------
 
 @app.route("/export/xml")
+@login_required
 def export_xml():
 
     AuditService.log_action(
@@ -428,6 +437,7 @@ def export_xml():
 # --------------------------------------------------
 
 @app.route("/donation", methods=["GET", "POST"])
+@login_required
 def donation():
 
     success_message = None
@@ -492,6 +502,7 @@ def donation():
 # --------------------------------------------------
 
 @app.route("/routine-issue", methods=["GET", "POST"])
+@login_required
 def routine_issue():
 
     error_message = None
@@ -550,6 +561,7 @@ def routine_issue():
 # --------------------------------------------------
 
 @app.route("/confirm-routine-issue", methods=["POST"])
+@login_required
 def confirm_routine_issue():
 
     requested_type = request.form.get(
@@ -679,6 +691,7 @@ def confirm_routine_issue():
 # --------------------------------------------------
 
 @app.route("/emergency", methods=["GET", "POST"])
+@login_required
 def emergency():
 
     success_message = None
