@@ -2,7 +2,10 @@ from flask import (
     Flask,
     render_template,
     request,
-    Response
+    Response, 
+    redirect, 
+    url_for, 
+    session
 )
 from src.blood_bank import BloodBank
 from src.models import (
@@ -10,14 +13,25 @@ from src.models import (
     AuditLogModel,
     BloodUnitModel,
     RoutineRequestModel,
-    EmergencyMCIModel
+    EmergencyMCIModel,
+    UserModel
 )
 from src.export_service import ExportService
 from src.audit_service import AuditService
 from src.blood_types import BLOOD_TYPES
-
+import os
 
 app = Flask(__name__)
+
+
+app.config["SECRET_KEY"] = os.environ.get(
+    "BECS_SECRET_KEY",
+    "becs-development-secret-key"
+)
+
+app.config["SESSION_COOKIE_HTTPONLY"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
+
 
 
 # --------------------------------------------------
@@ -37,6 +51,51 @@ with app.app_context():
 
 # Create the blood bank service
 blood_bank = BloodBank()
+
+
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    error = None
+
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+
+        user = UserModel.query.filter_by(
+            username=username
+        ).first()
+
+        if user is None:
+            error = "Invalid username or password."
+
+        elif not user.is_active:
+            error = "This account is disabled."
+
+        elif not user.check_password(password):
+            error = "Invalid username or password."
+
+        else:
+            session.clear()
+
+            session["user_id"] = user.id
+            session["username"] = user.username
+            session["role"] = user.role
+
+            return redirect(url_for("dashboard"))
+
+    return render_template(
+        "login.html",
+        error=error
+    )
+
+
+
+
+@app.route("/logout")
+def logout():
+    session.clear()
+    return redirect(url_for("login"))
 
 
 # --------------------------------------------------

@@ -798,3 +798,150 @@ body {
     border: 1px solid #aaa;
     border-radius: 6px;
 }
+
+
+
+
+
+/* =========================
+   Login Page
+   ========================= */
+
+.login-page {
+    min-height: 75vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+}
+
+.login-card {
+    width: 100%;
+    max-width: 430px;
+    background: white;
+    border-radius: 14px;
+    padding: 40px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+    text-align: center;
+}
+
+.login-icon {
+    width: 65px;
+    height: 65px;
+    margin: 0 auto 15px;
+    border-radius: 50%;
+    background: #b71c1c;
+    color: white;
+    font-size: 44px;
+    line-height: 60px;
+    font-weight: bold;
+}
+
+.login-card h1 {
+    margin: 0;
+    color: #b71c1c;
+    font-size: 32px;
+}
+
+.login-card h2 {
+    margin: 8px 0 5px;
+    font-size: 18px;
+    color: #333;
+}
+
+.login-subtitle {
+    margin-bottom: 30px;
+    color: #777;
+}
+
+.login-form {
+    text-align: left;
+}
+
+.login-form .form-group {
+    margin-bottom: 20px;
+}
+
+.login-form label {
+    display: block;
+    margin-bottom: 7px;
+    font-weight: 600;
+    color: #333;
+}
+
+.login-form input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 12px 14px;
+    border: 1px solid #ccc;
+    border-radius: 7px;
+    font-size: 15px;
+}
+
+.login-form input:focus {
+    outline: none;
+    border-color: #b71c1c;
+    box-shadow: 0 0 0 2px rgba(183, 28, 28, 0.12);
+}
+
+.login-button {
+    width: 100%;
+    padding: 13px;
+    border: none;
+    border-radius: 7px;
+    background: #b71c1c;
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.login-button:hover {
+    background: #8e1616;
+}
+
+.login-error {
+    background: #fdeaea;
+    border: 1px solid #e7aaaa;
+    color: #a31616;
+    padding: 10px;
+    border-radius: 6px;
+    margin: 20px 0;
+}
+
+.login-footer {
+    margin-top: 25px;
+    padding-top: 18px;
+    border-top: 1px solid #eee;
+    color: #888;
+    font-size: 13px;
+}
+
+
+
+
+
+
+
+/* =========================
+   Logged-in User
+   ========================= */
+
+.nav-user {
+    margin-left: auto;
+    padding: 8px 12px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.logout-link {
+    background: #b71c1c;
+    color: white !important;
+    padding: 8px 14px;
+    border-radius: 6px;
+    text-decoration: none;
+}
+
+.logout-link:hover {
+    background: #8e1616;
+}

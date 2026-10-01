@@ -30,6 +30,26 @@
                 <a href="/records-history">Records History</a>
                 <a href="/statistics">Statistics</a>
                 <a href="/audit-trail">Audit Trail</a>
+
+                {% if session.get("user_id") %}
+
+    <span class="nav-user">
+        {{ session.get("username") }}
+        ({{ session.get("role") }})
+    </span>
+
+    <a href="{{ url_for('logout') }}" class="logout-link">
+        Logout
+    </a>
+
+{% else %}
+
+    <a href="{{ url_for('login') }}">
+        Login
+    </a>
+
+{% endif %}
+
             </nav>
 
         </div>
