@@ -15,14 +15,22 @@ Records History - BECS
         Historical records of blood donations,
         routine blood requests and emergency MCI issues.
     </p>
-    <a
-    href="/export/xml"
-    class="primary-button export-button"
+
+    <!-- Full XML export contains donor personal information.
+         Admin access only. -->
+    {% if session.get("role") == "ADMIN" %}
+
+        <a
+            href="/export/xml"
+            class="primary-button export-button"
         >
-         Export All Records (XML)
+            Export All Records (XML)
         </a>
 
+    {% endif %}
+
 </section>
+
 
 <form
     method="GET"
@@ -93,7 +101,11 @@ Records History - BECS
             id="search"
             name="search"
             value="{{ search_text }}"
-            placeholder="Name, ID, blood type, destination..."
+            {% if session.get("role") == "RESEARCH_STUDENT" %}
+                placeholder="Blood type, status, destination..."
+            {% else %}
+                placeholder="Name, ID, blood type, destination..."
+            {% endif %}
         >
 
     </div>
@@ -124,6 +136,15 @@ Records History - BECS
 
     <h3>Blood Donation History</h3>
 
+    {% if session.get("role") == "RESEARCH_STUDENT" %}
+
+        <p>
+            De-identified donation records.
+            Donor personal information is hidden.
+        </p>
+
+    {% endif %}
+
     {% if blood_units %}
 
         <div class="history-table-wrapper">
@@ -132,16 +153,34 @@ Records History - BECS
 
                 <thead>
                     <tr>
+
                         <th>Unit ID</th>
+
                         <th>Blood Type</th>
+
                         <th>Donation Date</th>
-                        <th>Donor ID</th>
-                        <th>Donor Name</th>
+
+                        <!--
+                            Donor identifying information is available
+                            only to Admin and Blood Bank User.
+                        -->
+                        {% if session.get("role") in
+                            ["ADMIN", "BLOOD_BANK_USER"] %}
+
+                            <th>Donor ID</th>
+                            <th>Donor Name</th>
+
+                        {% endif %}
+
                         <th>Status</th>
+
                         <th>Registered At</th>
+
                         <th>Issued At</th>
+
                     </tr>
                 </thead>
+
 
                 <tbody>
 
@@ -161,22 +200,30 @@ Records History - BECS
                                 {{ unit.donation_date }}
                             </td>
 
-                            <td>
-                                {{ unit.donor_id }}
-                            </td>
+                            <!-- Personal donor information -->
+                            {% if session.get("role") in
+                                ["ADMIN", "BLOOD_BANK_USER"] %}
 
-                            <td>
-                                {{ unit.donor_name }}
-                            </td>
+                                <td>
+                                    {{ unit.donor_id }}
+                                </td>
+
+                                <td>
+                                    {{ unit.donor_name }}
+                                </td>
+
+                            {% endif %}
 
                             <td>
                                 {{ unit.status }}
                             </td>
 
                             <td>
+
                                 {{ unit.created_at.strftime(
                                     '%d/%m/%Y %H:%M:%S'
                                 ) }}
+
                             </td>
 
                             <td>
@@ -232,17 +279,28 @@ Records History - BECS
 
                 <thead>
                     <tr>
+
                         <th>Request ID</th>
+
                         <th>Requested Type</th>
+
                         <th>Requested</th>
+
                         <th>Destination</th>
+
                         <th>Issued</th>
+
                         <th>Issued Details</th>
+
                         <th>Status</th>
+
                         <th>Created At</th>
+
                         <th>Completed At</th>
+
                     </tr>
                 </thead>
+
 
                 <tbody>
 
@@ -279,9 +337,11 @@ Records History - BECS
                             </td>
 
                             <td>
+
                                 {{ routine.created_at.strftime(
                                     '%d/%m/%Y %H:%M:%S'
                                 ) }}
+
                             </td>
 
                             <td>
@@ -337,14 +397,22 @@ Records History - BECS
 
                 <thead>
                     <tr>
+
                         <th>MCI ID</th>
+
                         <th>O- Before</th>
+
                         <th>Requested</th>
+
                         <th>Issued</th>
+
                         <th>Remaining</th>
+
                         <th>Date / Time</th>
+
                     </tr>
                 </thead>
+
 
                 <tbody>
 
@@ -373,9 +441,11 @@ Records History - BECS
                             </td>
 
                             <td>
+
                                 {{ emergency.created_at.strftime(
                                     '%d/%m/%Y %H:%M:%S'
                                 ) }}
+
                             </td>
 
                         </tr>

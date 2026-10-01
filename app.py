@@ -7,7 +7,14 @@ from flask import (
     url_for, 
     session
 )
-from src.auth import login_required
+from src.auth import login_required, roles_required
+
+from src.user_roles import (
+    ADMIN,
+    BLOOD_BANK_USER,
+    RESEARCH_STUDENT
+)
+
 from src.blood_bank import BloodBank
 from src.models import (
     db,
@@ -122,7 +129,7 @@ def dashboard():
 # --------------------------------------------------
 
 @app.route("/audit-trail")
-@login_required
+@roles_required(ADMIN)
 def audit_trail():
 
     selected_action = request.args.get(
@@ -184,6 +191,10 @@ def audit_trail():
         search_text=search_text
     )
 
+
+
+
+
 # --------------------------------------------------
 # Records History
 # --------------------------------------------------
@@ -202,6 +213,8 @@ def records_history():
         ""
     ).strip()
 
+    current_role = session.get("role")
+
     # --------------------------------------------------
     # Blood Donation Records
     # --------------------------------------------------
@@ -212,22 +225,41 @@ def records_history():
 
         search_pattern = f"%{search_text}%"
 
-        blood_query = blood_query.filter(
-            db.or_(
-                BloodUnitModel.blood_type.ilike(
-                    search_pattern
-                ),
-                BloodUnitModel.donor_id.ilike(
-                    search_pattern
-                ),
-                BloodUnitModel.donor_name.ilike(
-                    search_pattern
-                ),
-                BloodUnitModel.status.ilike(
-                    search_pattern
+        # Research students must not search
+        # donor-identifying information.
+        if current_role == RESEARCH_STUDENT:
+
+            blood_query = blood_query.filter(
+                db.or_(
+                    BloodUnitModel.blood_type.ilike(
+                        search_pattern
+                    ),
+                    BloodUnitModel.status.ilike(
+                        search_pattern
+                    )
                 )
             )
-        )
+
+        else:
+
+            # Admin and Blood Bank User keep the
+            # original full search functionality.
+            blood_query = blood_query.filter(
+                db.or_(
+                    BloodUnitModel.blood_type.ilike(
+                        search_pattern
+                    ),
+                    BloodUnitModel.donor_id.ilike(
+                        search_pattern
+                    ),
+                    BloodUnitModel.donor_name.ilike(
+                        search_pattern
+                    ),
+                    BloodUnitModel.status.ilike(
+                        search_pattern
+                    )
+                )
+            )
 
     blood_units = (
         blood_query
@@ -298,6 +330,9 @@ def records_history():
         record_type=record_type,
         search_text=search_text
     )
+
+
+
 
 
 # --------------------------------------------------
@@ -402,7 +437,7 @@ def statistics():
 # --------------------------------------------------
 
 @app.route("/export/xml")
-@login_required
+@roles_required(ADMIN)
 def export_xml():
 
     AuditService.log_action(
@@ -437,7 +472,7 @@ def export_xml():
 # --------------------------------------------------
 
 @app.route("/donation", methods=["GET", "POST"])
-@login_required
+@roles_required(ADMIN, BLOOD_BANK_USER)
 def donation():
 
     success_message = None
@@ -502,7 +537,7 @@ def donation():
 # --------------------------------------------------
 
 @app.route("/routine-issue", methods=["GET", "POST"])
-@login_required
+@roles_required(ADMIN, BLOOD_BANK_USER)
 def routine_issue():
 
     error_message = None
@@ -561,7 +596,7 @@ def routine_issue():
 # --------------------------------------------------
 
 @app.route("/confirm-routine-issue", methods=["POST"])
-@login_required
+@roles_required(ADMIN, BLOOD_BANK_USER)
 def confirm_routine_issue():
 
     requested_type = request.form.get(
@@ -691,7 +726,7 @@ def confirm_routine_issue():
 # --------------------------------------------------
 
 @app.route("/emergency", methods=["GET", "POST"])
-@login_required
+@roles_required(ADMIN, BLOOD_BANK_USER)
 def emergency():
 
     success_message = None

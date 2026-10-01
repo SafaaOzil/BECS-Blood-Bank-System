@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -17,38 +18,77 @@
     <header class="main-header">
         <div class="header-container">
 
+            <!-- Logo -->
             <div class="logo">
                 <h1>BECS</h1>
                 <span>Blood Bank Management System</span>
             </div>
 
+            <!-- Navigation -->
             <nav class="navbar">
-                <a href="/">Dashboard</a>
-                <a href="/donation">Blood Donation</a>
-                <a href="/routine-issue">Routine Issue</a>
-                <a href="/emergency">Emergency MCI</a>
-                <a href="/records-history">Records History</a>
-                <a href="/statistics">Statistics</a>
-                <a href="/audit-trail">Audit Trail</a>
 
                 {% if session.get("user_id") %}
 
-    <span class="nav-user">
-        {{ session.get("username") }}
-        ({{ session.get("role") }})
-    </span>
+                    <!-- Available to all logged-in users -->
+                    <a href="/">Dashboard</a>
 
-    <a href="{{ url_for('logout') }}" class="logout-link">
-        Logout
-    </a>
+                    <!-- Admin and Blood Bank User -->
+                    {% if session.get("role") in ["ADMIN", "BLOOD_BANK_USER"] %}
 
-{% else %}
+                        <a href="/donation">
+                            Blood Donation
+                        </a>
 
-    <a href="{{ url_for('login') }}">
-        Login
-    </a>
+                        <a href="/routine-issue">
+                            Routine Issue
+                        </a>
 
-{% endif %}
+                        <a href="/emergency">
+                            Emergency MCI
+                        </a>
+
+                    {% endif %}
+
+                    <!-- Available to all logged-in users -->
+                    <a href="/records-history">
+                        Records History
+                    </a>
+
+                    <a href="/statistics">
+                        Statistics
+                    </a>
+
+                    <!-- Admin only -->
+                    {% if session.get("role") == "ADMIN" %}
+
+                        <a href="/audit-trail">
+                            Audit Trail
+                        </a>
+
+                    {% endif %}
+
+                    <!-- Current User -->
+                    <span class="nav-user">
+                        {{ session.get("username") }}
+                        ({{ session.get("role") }})
+                    </span>
+
+                    <!-- Logout -->
+                    <a
+                        href="{{ url_for('logout') }}"
+                        class="logout-link"
+                    >
+                        Logout
+                    </a>
+
+                {% else %}
+
+                    <!-- Not logged in -->
+                    <a href="{{ url_for('login') }}">
+                        Login
+                    </a>
+
+                {% endif %}
 
             </nav>
 
@@ -56,9 +96,12 @@
     </header>
 
     <main class="main-content">
+
         {% block content %}
         {% endblock %}
+
     </main>
 
 </body>
+
 </html>
